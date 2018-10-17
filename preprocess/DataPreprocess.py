@@ -59,7 +59,8 @@ def relationship(question, answer, votes):
 
 
 def QuestionAnswerContent(rawData):
-    return rawData[['Id','Body']]
+    #PUZZLE: set_index api 
+    return rawData[['Id','Body']].set_index("Id",drop=False)
     
 
 def QuestionAnswerId(rawData):

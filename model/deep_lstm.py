@@ -9,7 +9,7 @@ from tensorflow.nn.rnn_cell import LSTMCell
 
 
 class DeepLSTM:
-    def __init__(self, config,datainfo, pre_embed):
+    def __init__(self, config, datainfo, pre_embed):
         self.config = config
         self.datainfo = datainfo
         self.pre_embed = pre_embed
@@ -23,14 +23,14 @@ class DeepLSTM:
         self.question_placeholder = tf.placeholder(tf.int32,[None, None])
         #ATTENTION: best answer in the first place
         self.answer_placeholder = tf.placeholder(tf.int32,[None, None])
-        self.score_placeholder = tf.placeholder(tf.int32, [None])
+        # self.score_placeholder = tf.placeholder(tf.int32, [None])
         self.answer_length_list = tf.placeholder(tf.int32, [None])
         self.answer_user_placeholder = tf.placeholder(tf.int32,[None])
         self.answer_vote_placeholder = tf.placeholder(tf.float32,[None])
         self.state_keep_prob = tf.placeholder(tf.float32, shape=())
         self.question_length = tf.placeholder(tf.int32, shape=())
 
-    def create_feed_dict(self, answer,question,answer_length_list,answer_user_list, answer_vote_list, state_keep_prob=1.0, question_length,score=None):
+    def create_feed_dict(self, answer,question,answer_length_list,answer_user_list, answer_vote_list, state_keep_prob=1.0, question_length):
         feed_dict = {
             self.answer_placeholder: answer,
             self.question_placeholder:question ,
@@ -39,9 +39,9 @@ class DeepLSTM:
             self.answer_user_placeholder: answer_user_list
             self.answer_vote_placeholder: answer_vote_list
         }
-        if labels_batch is not None:
-            feed_dict[self.score_placeholder] = score
-        return feed_dict
+        # if labels_batch is not None:
+        #     feed_dict[self.score_placeholder] = score
+        # return feed_dict
 
     def generate_cell(self):
         # use ordinary cell
@@ -67,7 +67,7 @@ class DeepLSTM:
         
 
 
-        ##########################################
+        ############################r##############
         ### Question and answer word vector -> LSTM
         ##########################################
         with tf.variable_scope('train'):
@@ -158,10 +158,10 @@ class DeepLSTM:
         return prediction
 
     def train_on_batch(self, sess, answer, question, answer_length_list, answer_user_list, \
-      answer_vote_list, question_length, state_keep_prob, keep_prob=0.2, score):
+      answer_vote_list, question_length, state_keep_prob, keep_prob=0.2):
         feed = self.create_feed_dict(
             answer, question, answer_length_list, answer_user_list, \
-            answer_vote_list, question_length, state_keep_prob, keep_prob, score
+            answer_vote_list, question_length, state_keep_prob, keep_prob
         )
         _, loss, prediction = sess.run([self.train_op, self.loss, self.pred], feed_dict=feed)
         return loss, prediction

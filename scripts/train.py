@@ -12,6 +12,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
 from model import DeepLSTM
+from preprocess.GenerateData import DataSetLoad 
+import gc
 
 
 class Config:
@@ -27,47 +29,50 @@ class Config:
 
 
 class Train:
-    def __init__(self, root_dir, config, debug=True):
+    def __init__(self, config, debug=True):
         self.config = config
-        self.test_set = tf.gfile.Glob(join(root_dir, "test", "*.question"))
-        if debug:
-            self.validation_set = tf.gfile.Glob(join(root_dir, "validation", "*.question"))
-        else:
-            self.training_set = tf.gfile.Glob(join(root_dir, "training", "*.question"))
-        self.vocabulary, self.reverse_vocabulary = load_vocab(root_dir, str(Config.vocab_size - 2))
-        self.reverse_vocabulary = ['BAR_', 'UNK_'] + self.reverse_vocabulary
-        self.pool = Pool(4)
         self.debug = debug
 
-    """
-    def test_labels(self):
-        _, _, a = zip(*questions_to_token_ids(self.training_set, self.vocabulary))
-        for i in range(len(a)):
-            if a[i] > 100001:
-                print(a[i], self.training_set[i])
-    """
 
-    def load_file(self, files):
-        ret = self.pool.map(joblib.load, files)
-        return ret
+    def load_data(self):
+        dataloader = DataSetLoad(self.config.loadPicke, self.config.ordinary_fileName)
+        content, question_user_vote = dataloader(self.config.isStore, self.config.pickle_fileName)
+        return content, question_user_vote
 
-    def gen_file(self, data_set, size=True):
-        if size:
-            size = self.config.batch_size
-        else:
-            size = 5 * self.config.batch_size
-        samples = random.sample(list(data_set), size)
-        inputs, length, labels = zip(*self.load_file(samples))
-        max_len = max(length)
-        inputs = padding(inputs, max_len)
-        return inputs, length, labels
+    #one question -> multiple answer
+    def gen_data(self, content, question_user_vote_group, questionId):
+        m = question_user_vote_group.get_group(questionId)
+        sum_vote = np.sum(m['VoteCount']) + self.config.valueCountSmooth
+        m['VoteCount'] = m['VoteCount'].apply(lambda x: x *1.0 / sum_vote)
+        sorted_m = m.sort_values(by=['VoteCount'])
+        
+        answer_id_list = sorted_m['AnswerId']
+        user_id_list = sorted_m['UserId']
+        answer_vote_list = sorted_m['VoteCount']
+        question_content = content[questionId,'Body']
+        answer_content_list = contnet[answer_id,'Body']
+        question_length = question_content.apply(len)
+        answer_length_list = answer_content.apply(len)
+        return answer_content_list, question_content, answer_length_list, \
+        user_id_list, answer_vote_list, question_length
+
+
+
+
+        
 
     def train(self, mc_model, model_output):
-        if self.debug:
-            data_set = self.validation_set
-            random.seed(10)
-        else:
-            data_set = self.training_set
+        # if self.debug:
+        #     data_set = self.validation_set
+        #     random.seed(10)
+        # else:
+        content, question_user_vote = self.load_data()
+        question_user_vote_group = question_user_vote.groupby('QuestionId')
+        gc.enable()
+        del question_user_vote
+        gc.collect()
+        questionIds = question_user_vote_group.groups
+        
         with tf.Graph().as_default():
             max_f1_score = 0.0
             model = mc_model(self.config)
@@ -106,6 +111,7 @@ class Train:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--root", help="数据集的 question 目录")
+    parser.add_argument("-p", "--pickle",help="文件类型是pickle")
     args = parser.parse_args()
     config = Config()
     train = Train(args.root, config, debug=False)
