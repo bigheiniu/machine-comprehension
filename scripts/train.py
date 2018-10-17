@@ -11,9 +11,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
-from utils import padding
-from data_utils import load_vocab
-from model.deep_lstm import DeepLSTM
+from model import DeepLSTM
 
 
 class Config:
