@@ -1,7 +1,8 @@
 import numpy as np 
 import pandas as pd 
 import pickle
-from convert2index import Word2index
+from preprocess import GetData, DataPreprocess, TextDataPreprocess, convert2index
+import Config
 
 class DataSetLoad:
     
@@ -19,13 +20,13 @@ class DataSetLoad:
     
     def loadData(self, isStore=False, StoreLoaction=None):
         if(self.loadPickle):
-            with open(fileName[0], "rb") as f1:
+            with open(self.fileName[0], "rb") as f1:
                 content = pickle.load(f1)
-            with open(fileName[1],"rb") as f1:
+            with open(self.fileName[1],"rb") as f1:
                 question_user_vote = pickle.load(f1)
         else:
-            votes = GetData.getVotesRelationship(fileName[0],isStore, StoreLoaction)
-            post = GetData.getPostData(fileName[1], isStore, StoreLoaction)
+            votes = GetData.getVotesRelationship(self.fileName[0],isStore, StoreLoaction)
+            post = GetData.getPostData(self.fileName[1], isStore, StoreLoaction)
             content = DataPreprocess.QuestionAnswerContent(post)
             question,answer = DataPreprocess.QuestionAnswerId(post)
             votes = DataPreprocess.scaleVote(question,votes)
@@ -39,10 +40,17 @@ class DataSetLoad:
                     pickle.dump(f1,  question_user_vote)
         return content, question_user_vote
 
-    def LoadEmbedding(self, corpus):
-        self.word2indx = Word2index(corpus)
+    # def LoadEmbedding(self):
+    #     return self.word2indx.loadEmbeddingMatrix(Config.Config.word2vect_dir)
+    # def sequence2indx(self,text):
+    #     return self.word2indx.convert(text)
+    #
+    # def setWord2index(self,corpus):
+    #     self.word2indx = convert2index.Word2index(corpus)
+
+
+
         
-    
-                    
+
 
         

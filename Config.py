@@ -8,6 +8,7 @@ class Config:
     num_sampled = 512
     n_epoch = 512
     train_steps = 200
+    maxlen = 200
     ordianry_fileName = []
     pickle_fileName = []
     loadPickle = False

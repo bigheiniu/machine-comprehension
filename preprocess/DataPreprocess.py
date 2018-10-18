@@ -1,6 +1,5 @@
 import pandas as pd 
-import numpy as np 
-import GetData
+import numpy as np
 import gc
 
 # 准备将用户在同一个问题下的回答当做 社交关系, 用户之间的关系类似于 pageRank 算法, 

@@ -4,29 +4,19 @@ import numpy as np
 from tqdm import tqdm
 import argparse
 import tensorflow as tf
-from multiprocessing import Pool
-from sklearn.externals import joblib
 from os.path import abspath, dirname, join, exists
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
-from model import DeepLSTM
+from model.deep_lstm import DeepLSTM
 from preprocess.GenerateData import DataSetLoad 
 from preprocess.convert2index import Word2index
+import Config
 import gc
+from utils import padding_easy
 
 
-class Config:
-    vocab_size = 100002
-    embed_size = 200
-    state_size = 256
-    depth = 2
-    lr = 5E-4
-    batch_size = 32
-    num_sampled = 512
-    n_epoch = 512
-    train_steps = 200
 
 
 class Train:
@@ -46,15 +36,21 @@ class Train:
         m = question_user_vote_group.get_group(questionId)
         sum_vote = np.sum(m['VoteCount']) + self.config.valueCountSmooth
         # ratio of vote 
-        m['VoteCount'] = m['VoteCount'].apply(lambda x: x *1.0 / sum_vote)
+        m['VoteCount'] = m['VoteCount'].apply(lambda x: x * 1.0 / sum_vote)
+        ##all transported from pandas to numpy
+        # TODO: performance--use List
         sorted_m = m.sort_values(by=['VoteCount'])
-        answer_id_list = sorted_m['AnswerId']
-        user_id_list = sorted_m['UserId']
-        answer_vote_list = sorted_m['VoteCount']
+        answer_id_list = sorted_m['AnswerId'].values
+        user_id_list = sorted_m['UserId'].values
+        answer_vote_list = sorted_m['VoteCount'].values
         question_content = content[questionId,'Body']
-        answer_content_list = contnet[answer_id,'Body']
+        # padding to have the same length
+        question_content = padding_easy(question_content.values, self.config.maxlen)
+        answer_content_list = content[answer_id_list,'Body']
+        answer_content_list = padding_easy(answer_content_list.values, self.config.maxlen)
+
         question_length = question_content.apply(len)
-        answer_length_list = answer_content.apply(len)
+        answer_length_list = answer_content_list.apply(len)
         return answer_content_list, question_content, answer_length_list, \
         user_id_list, answer_vote_list, question_length
 
@@ -65,10 +61,10 @@ class Train:
         # else:
         content, question_user_vote = self.load_data()
         question_user_vote_group = question_user_vote.groupby('QuestionId')
-        
+
         word2index =  Word2index(content["Body"].values)
         # convert word into index
-        content["Body"] = word2index.convert(conten["Body"])
+        content["Body"] = word2index.convert(content["Body"])
         embedMatrix = word2index.loadEmbeddingMatrix(self.config.word2vect_dir)
         # load 
         gc.enable()
@@ -97,7 +93,7 @@ class Train:
                         avg_loss += loss
                         flag = flag + 1
                         acc_ratio = acc * 1.0 / (flag * 1.0)
-                        pbar.set_description("loss/acc: {:.2f}/{:.2f}".format(mean_loss, acc_ratio))
+                        pbar.set_description("loss/acc: {:.2f}/{:.2f}".format(avg_loss, acc_ratio))
                         
                     # prediction = model.predict_on_batch(session, inputs, length)
                     # f1 = f1_score(labels, prediction, average='micro')
@@ -119,7 +115,7 @@ if __name__ == "__main__":
     # parser.add_argument("-p", "--pickle",help="文件类型是pickle")
     # args = parser.parse_args()
     # config = Config()
-    config = Config()
-    datainfo = Datainfo()
+    config = Config.Config
+    datainfo = Config.DataInfo
     train = Train(config, datainfo, debug=False)
     train.train(mc_model=DeepLSTM, model_output="model.ckpt")

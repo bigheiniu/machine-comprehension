@@ -1,6 +1,6 @@
 from tensorflow.contrib.keras import preprocessing 
 from gensim.models import KeyedVectors
-
+import numpy as np
 
 
 class Config:

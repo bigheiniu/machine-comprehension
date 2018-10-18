@@ -1,25 +1,9 @@
-#TODO: text preprocess
 #https://www.kaggle.com/lystdo/lstm-with-word2vec-embeddings
 
-import os
 import re
-import csv
-import codecs
-import numpy as np
-import pandas as pd
 
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
-from string import punctuation
-
-from gensim.models import KeyedVectors
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from keras.layers import Dense, Input, LSTM, Embedding, Dropout, Activation
-from keras.layers.merge import concatenate
-from keras.models import Model
-from keras.layers.normalization import BatchNormalization
-from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 import sys
 reload(sys)
@@ -32,7 +16,7 @@ def text_to_wordlist(text_list, remove_stop_words=False, stem_words=False):
     text_list = [x.lower().split() for x in text_list]
 
     #remove the stop words
-    if remove_stopwords:
+    if remove_stop_words:
         stops = set(stopwords.words("english"))
         text_list = [[w for w in sentence if not w in stops] for sentence in text_list]
     

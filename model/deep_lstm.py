@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.contrib import rnn
 from tensorflow.contrib.layers import xavier_initializer
-from tensorflow.nn.rnn_cell import LSTMCell
+
 
 # from .cell import LSTMCell, MultiLSTMCell
 #TODO: config add bias, maxlens
@@ -30,22 +30,24 @@ class DeepLSTM:
         self.state_keep_prob = tf.placeholder(tf.float32, shape=())
         self.question_length = tf.placeholder(tf.int32, shape=())
 
-    def create_feed_dict(self, answer,question,answer_length_list,answer_user_list, answer_vote_list, state_keep_prob=1.0, question_length):
+    def create_feed_dict(self, answer,question,answer_length_list,answer_user_list, answer_vote_list, question_length, state_keep_prob=1.0 ):
         feed_dict = {
             self.answer_placeholder: answer,
             self.question_placeholder:question ,
             self.answer_length_list: answer_length_list,
             self.question_length: question_length,
             self.answer_user_placeholder: answer_user_list,
-            self.answer_vote_placeholder: answer_vote_list
+            self.answer_vote_placeholder: answer_vote_list,
+            self.state_keep_prob: state_keep_prob
         }
+        return feed_dict
         # if labels_batch is not None:
         #     feed_dict[self.score_placeholder] = score
         # return feed_dict
 
     def generate_cell(self):
         # use ordinary cell
-        return rnn.DropoutWrapper(LSTMCell(self.config.numhidden), output_keep_prob=self.state_keep_prob)
+        return rnn.DropoutWrapper(tf.nn.rnn_cell.LSTMCell(self.config.numhidden), output_keep_prob=self.state_keep_prob)
 
     #        return rnn.DropoutWrapper(LSTMCell(self.config.state_size), state_keep_prob=self.state_keep_prob)
     # def user_defined_cell(self):
@@ -102,13 +104,13 @@ class DeepLSTM:
         ##########################################
         ## Lr = sum(max(0, c + f(q_i, bad_a, bad_u) - sum( f(q_j, good_a, good_u)) ))
         Loss = []
-        a_good = df.gather(answer_lstm_ouput,tf.convert_to_tensor(0))
-        u_good = df.gather(self.answer_user_placeholder, tf.convert_to_tensor(0))
+        a_good = tf.gather(answer_lstm_ouput,tf.convert_to_tensor(0))
+        u_good = tf.gather(self.answer_user_placeholder, tf.convert_to_tensor(0))
         c = tf.constant(self.config.constant_bias)
         a_size = tf.shape(answer)[1]
-        for s in tf.range(1, a_size):
-            a_bad = tf.gather(answer_vector,i_tensor)
-            u_bad = tf.gather(user, tf.gather(answer_user_placeholder, i_tensor))
+        for i_tensor in tf.range(1, a_size):
+            a_bad = tf.gather(answer_lstm_ouput,i_tensor)
+            u_bad = tf.gather(user, tf.gather(self.answer_user_placeholder, i_tensor))
             Loss.append( c + tf.matmul(question_lstm_output, a_bad, transpose_b=True) * tf.matmul(question_lstm_output, u_bad, transpose_b=True) - tf.matmul(question_lstm_output, a_good,transpose_b=True) * tf.matmul(question_lstm_output, u_good, transpose_b=True) )
         Loss = tf.stack(Loss)
         
@@ -130,11 +132,11 @@ class DeepLSTM:
             u1_vote_ratio = tf.gather(self.answer_vote_placeholder, index_tensor)
             u1_vec = tf.gather(user, user_id)
             u2_matrix = tf.gather(user, self.answer_user_placeholder)
-            norm.append( u1_vec - tf.reduce_sum(tf.multiply(u1_vote_norm , u2_matrix )))
+            norm.append( u1_vec - tf.reduce_sum(tf.multiply(u1_vote_ratio , u2_matrix )))
             index = index + 1
         norm = tf.stack(norm)
         norm = tf.reduce_sum(norm)
-        error_norm = tf.reduce_sum(Loss) + self.config.Lambda * export_norm
+        error_norm = tf.reduce_sum(Loss) + self.config.Lambda * norm
         #accuracy evaluation
 
         loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
@@ -156,10 +158,10 @@ class DeepLSTM:
         return prediction
 
     def train_on_batch(self, sess, answer, question, answer_length_list, answer_user_list, \
-      answer_vote_list, question_length, state_keep_prob, keep_prob=0.2):
-        feed = self.create_feed_dict(
+      answer_vote_list, question_length, keep_prob=0.2):
+        feed = self.create_feed_dict( \
             answer, question, answer_length_list, answer_user_list, \
-            answer_vote_list, question_length, state_keep_prob, keep_prob
+            answer_vote_list, question_length, keep_prob
         )
         _, loss, prediction = sess.run([self.train_op, self.loss, self.pred], feed_dict=feed)
         return loss, prediction
