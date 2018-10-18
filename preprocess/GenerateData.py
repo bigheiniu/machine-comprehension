@@ -1,6 +1,7 @@
 import numpy as np 
 import pandas as pd 
 import pickle
+from convert2index import Word2index
 
 class DataSetLoad:
     
@@ -37,6 +38,11 @@ class DataSetLoad:
                 with open(StoreLoaction[1],'wb') as f1:
                     pickle.dump(f1,  question_user_vote)
         return content, question_user_vote
+
+    def LoadEmbedding(self, corpus):
+        self.word2indx = Word2index(corpus)
+        
+    
                     
 
         

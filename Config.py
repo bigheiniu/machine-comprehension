@@ -13,15 +13,10 @@ class Config:
     loadPickle = False
     isStore = True
     valueCountSmooth = 0.0
-
+    word2vect_dir = ""
 class DataInfo:
     userDim = 200
-    
-    def __init__:(userSize):
-        self._usersize = userSize
-    @property
-    def userSize():
-        return self._usersize
+    userSize = 1000
 
     
 

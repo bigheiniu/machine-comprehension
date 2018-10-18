@@ -15,7 +15,7 @@ class Config:
     train_steps = 200
 
 
-class word2indx:
+class Word2index:
     def __init__(self, text_corpus):
         self.tokenizer = preprocessing.text.Tokenizer(num_words=Config.vocab_size)
         self.tokenizer.fit_on_texts(text_corpus)
@@ -23,7 +23,7 @@ class word2indx:
     def convert(self, text_convert):
         return self.tokenizer.texts_to_sequences(text_convert)
     
-    def loadEmbeddingMatrix(self,file_dir):
+    def loadEmbeddingMatrix(self, file_dir):
         word2vec = KeyedVectors.load_word2vec_format(file_dir, binary=True)
         print('Found %s word vectors of word2vec' % len(word2vec.vocab))
         word_index = self.tokenizer.word_index
