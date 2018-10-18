@@ -34,7 +34,7 @@ class DataSetLoad:
             content.iloc[:,0] = TextDataPreprocess.text_to_wordlist(content.iloc[:,0])
             if(isStore):
                 with open(StoreLoaction[0],'wb') as f1:
-                    pickle.dump(f1, content):
+                    pickle.dump(f1, content)
                 with open(StoreLoaction[1],'wb') as f1:
                     pickle.dump(f1,  question_user_vote)
         return content, question_user_vote

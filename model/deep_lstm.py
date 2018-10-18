@@ -34,9 +34,9 @@ class DeepLSTM:
         feed_dict = {
             self.answer_placeholder: answer,
             self.question_placeholder:question ,
-            self.answer_length_list: answer_length_list
-            self.question_length: question_length
-            self.answer_user_placeholder: answer_user_list
+            self.answer_length_list: answer_length_list,
+            self.question_length: question_length,
+            self.answer_user_placeholder: answer_user_list,
             self.answer_vote_placeholder: answer_vote_list
         }
         # if labels_batch is not None:
@@ -109,9 +109,7 @@ class DeepLSTM:
         for s in tf.range(1, a_size):
             a_bad = tf.gather(answer_vector,i_tensor)
             u_bad = tf.gather(user, tf.gather(answer_user_placeholder, i_tensor))
-            Loss.append( c + tf.matmul(question_lstm_output, a_bad, transpose_b=True) \ 
-                * tf.matmul(question_lstm_output, u_bad, transpose_b=True) \
-                - tf.matmul(question_lstm_output, a_good,transpose_b=True) * tf.matmul(question_lstm_output, u_good, transpose_b=True) )
+            Loss.append( c + tf.matmul(question_lstm_output, a_bad, transpose_b=True) * tf.matmul(question_lstm_output, u_bad, transpose_b=True) - tf.matmul(question_lstm_output, a_good,transpose_b=True) * tf.matmul(question_lstm_output, u_good, transpose_b=True) )
         Loss = tf.stack(Loss)
         
         ##########################################

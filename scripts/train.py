@@ -13,7 +13,7 @@ sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
 from model import DeepLSTM
 from preprocess.GenerateData import DataSetLoad 
-from prepeocess.convert2index import Word2index
+from preprocess.convert2index import Word2index
 import gc
 
 
@@ -38,7 +38,7 @@ class Train:
 
     def load_data(self):
         dataloader = DataSetLoad(self.config.loadPicke, self.config.ordinary_fileName)
-        content, question_user_vote = dataloader(self.config.isStore, self.config.pickle_fileName)
+        content, question_user_vote = dataloader.loadData(self.config.isStore, self.config.pickle_fileName)
         return content, question_user_vote
 
     #one question -> multiple answer
@@ -99,19 +99,18 @@ class Train:
                         acc_ratio = acc * 1.0 / (flag * 1.0)
                         pbar.set_description("loss/acc: {:.2f}/{:.2f}".format(mean_loss, acc_ratio))
                         
-                    inputs, length, labels = self.gen_file(self.test_set, False)
-                    prediction = model.predict_on_batch(session, inputs, length)
-                    f1 = f1_score(labels, prediction, average='micro')
-                    print("evaluate: acc/pre/rec/f1: {:.2f}/{:.2f}/{:.2f}/{:.2f}".format(
-                            accuracy_score(labels, prediction),
-                            precision_score(labels, prediction, average='micro'),
-                            recall_score(labels, prediction, average='micro'),
-                            f1
-                        ))
-                    if f1 > max_f1_score:
-                        print("New best score! Saving model in {}".format(model_output))
-                        max_f1_score = f1
-                        saver.save(session, model_output)
+                    # prediction = model.predict_on_batch(session, inputs, length)
+                    # f1 = f1_score(labels, prediction, average='micro')
+                    # print("evaluate: acc/pre/rec/f1: {:.2f}/{:.2f}/{:.2f}/{:.2f}".format(
+                    #         accuracy_score(labels, prediction),
+                    #         precision_score(labels, prediction, average='micro'),
+                    #         recall_score(labels, prediction, average='micro'),
+                    #         f1
+                    #     ))
+                    # if f1 > max_f1_score:
+                    #     print("New best score! Saving model in {}".format(model_output))
+                    #     max_f1_score = f1
+                    #     saver.save(session, model_output)
 
 
 if __name__ == "__main__":
@@ -122,5 +121,5 @@ if __name__ == "__main__":
     # config = Config()
     config = Config()
     datainfo = Datainfo()
-    train = Train(config, datainfo debug=False)
+    train = Train(config, datainfo, debug=False)
     train.train(mc_model=DeepLSTM, model_output="model.ckpt")
