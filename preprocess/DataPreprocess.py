@@ -1,6 +1,5 @@
 import pandas as pd 
 import numpy as np
-import gc
 
 # 准备将用户在同一个问题下的回答当做 社交关系, 用户之间的关系类似于 pageRank 算法, 
 # U_i = sum(votes_{people who answer this question} / votes_{person i get votes from this quesiton} * {people who answer this quesiton} )  
@@ -51,7 +50,7 @@ return QuestionId, UserId, VoteCount
 def relationship(question, answer, votes):
     answer_vote = answer.merge(votes, how="left", left_on="Id", right_on="PostId")
     values = {"VoteCount":0}
-    answer.fillna(value=values,inplace=True)
+    answer_vote.fillna(value=values,inplace=True)
     question_user = question.merge(answer, how="left",left_on="Id",right_on="ParentId")
     question.columns = ['QuestionId','UserId','VoteCount']
     return question_user
@@ -63,13 +62,13 @@ def QuestionAnswerContent(rawData):
     
 
 def QuestionAnswerId(rawData):
-    answer = post[post['PostTypeId'] == '2']
-    question = post[post['PostTypeId'] == '1']
+    answer = rawData[rawData['PostTypeId'] == '2']
+    question = rawData[rawData['PostTypeId'] == '1']
     return question[['Id', 'AcceptedAnswerId']],answer[['Id', 'OwnerUserId', 'ParentId']]
 
 def VoteCount(rawData, voteType):
     votes = rawData[rawData['VoteTypeId'] == voteType]
-    votes_group =   votes.groupby(['PostId'])['Id'].count()
+    votes_group = votes.groupby(['PostId'])['Id'].count()
     votes_group.reset_index()
     votes = votes.rename(index=str,columns={'index':'PostId'})
     return votes
@@ -83,9 +82,10 @@ votes: PostId, VoteCount (only consider upvotes)
 def question_answer_user_pair(answer, votes):
     answer_vote = answer.merge(votes,how="left",left_on="Id",right_on="PostId")
     values = {"VoteCount":0}
+    # 有些回答没人点赞
     answer_vote.fillna(value=values,inplace=True)
     answer_vote.columns = ['AnswerId','UserId','QuestionId','VoteCount']
-    answer_vote = answer[['QuestionId','AnswerId','UserId','VoteCount']]
+    answer_vote = answer_vote[['QuestionId','AnswerId','UserId','VoteCount']]
     return answer_vote
 
 def getScore(value_list):

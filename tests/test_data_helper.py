@@ -8,7 +8,7 @@ from os.path import abspath, dirname, join
 sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
 from utils import padding
-from data_utils import questions_to_token_ids, load_vocab
+# from data_utils import questions_to_token_ids, load_vocab
 
 
 class Config:

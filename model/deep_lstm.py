@@ -96,7 +96,7 @@ class DeepLSTM:
         ### Initializier User Vector
         ##########################################
         #TODO: use user profile to initialize user vector
-        user = tf.get_variable("user",[self.datainfo.userSize, self.config.userDim], initializer=xavier_initializer())
+        user = tf.get_variable("user", [self.datainfo.userSize, self.config.userDim], initializer=xavier_initializer())
 
 
         ##########################################
