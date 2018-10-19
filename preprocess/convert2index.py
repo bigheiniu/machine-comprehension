@@ -5,7 +5,7 @@ import numpy as np
 
 class Config:
     vocab_size = 100002
-    embed_size = 200
+    embed_size = 300
     state_size = 256
     depth = 1
     lr = 5E-4

@@ -27,8 +27,8 @@ class Train:
 
 
     def load_data(self):
-        dataloader = DataSetLoad(self.config.loadPicke, self.config.ordinary_fileName)
-        content, question_user_vote = dataloader.loadData(self.config.isStore, self.config.pickle_fileName)
+        dataloader = DataSetLoad()
+        content, question_user_vote = dataloader.loadData()
         return content, question_user_vote
 
     #one question -> multiple answer
@@ -43,14 +43,14 @@ class Train:
         answer_id_list = sorted_m['AnswerId'].values
         user_id_list = sorted_m['UserId'].values
         answer_vote_list = sorted_m['VoteCount'].values
-        question_content = content[questionId,'Body']
+        question_content = [content.loc[questionId,'Body']]
         # padding to have the same length
-        question_content = padding_easy(question_content.values, self.config.maxlen)
-        answer_content_list = content[answer_id_list,'Body']
+        question_content = padding_easy(question_content, self.config.maxlen)
+        answer_content_list = content.loc[answer_id_list,'Body']
         answer_content_list = padding_easy(answer_content_list.values, self.config.maxlen)
 
-        question_length = question_content.apply(len)
-        answer_length_list = answer_content_list.apply(len)
+        question_length = [ len(x) for x in question_content]
+        answer_length_list = [len(x) for x in answer_content_list]
         return answer_content_list, question_content, answer_length_list, \
         user_id_list, answer_vote_list, question_length
 
@@ -65,7 +65,7 @@ class Train:
         word2index =  Word2index(content["Body"].values)
         # convert word into index
         content["Body"] = word2index.convert(content["Body"])
-        embedMatrix = word2index.loadEmbeddingMatrix(self.config.word2vect_dir)
+        # embedMatrix = word2index.loadEmbeddingMatrix(self.config.word2vect_dir)
         # load 
         gc.enable()
         del question_user_vote
@@ -74,7 +74,7 @@ class Train:
         question_size = len(questionIds_list)
         with tf.Graph().as_default():
             max_f1_score = 0.0
-            model = mc_model(self.config, self.datainfo, embedMatrix)
+            model = mc_model(self.config, self.datainfo)
             init = tf.global_variables_initializer()
             saver = tf.train.Saver()
             with tf.Session() as session:
@@ -85,14 +85,17 @@ class Train:
                     avg_loss, avg_acc = 0.0, 0.0
                     flag = 0
                     for question_id in questionIds_list:
+
                         answer_content_list, question_content, answer_length_list, \
         user_id_list, answer_vote_list, question_length = self.gen_data(content, question_user_vote_group, question_id)
-                        loss, prediction = model.train_on_batch(session, answer_content_list, question_content, answer_length_list, \
+                        fuck = 1
+                        loss, prediction = model.train_on_batch(session, answer_content_list, question_content, answer_length_list,
                         user_id_list, answer_vote_list, question_length)
-                        acc = acc + prediction
+
+                        avg_acc = avg_acc + prediction
                         avg_loss += loss
                         flag = flag + 1
-                        acc_ratio = acc * 1.0 / (flag * 1.0)
+                        acc_ratio = avg_acc * 1.0 / (flag * 1.0)
                         pbar.set_description("loss/acc: {:.2f}/{:.2f}".format(avg_loss, acc_ratio))
                         
                     # prediction = model.predict_on_batch(session, inputs, length)

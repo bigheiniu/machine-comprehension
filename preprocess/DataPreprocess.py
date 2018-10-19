@@ -8,9 +8,10 @@ import numpy as np
 assume accepted answer will receive 1.5 upvote than before.
 '''
 def scaleVote(question, votes, scaleValue=1.5):
-    accepted_ans = question.AcceptedAnswerId
-    votes = votes.set_index('PostId',drop=False)
-    votes[accepted_ans] = votes[accepted_ans] * scaleValue
+    accepted_ans = question.dropna(how="any")
+    accepted_ans = accepted_ans.AcceptedAnswerId
+    index = set(accepted_ans.values).intersection(votes.index)
+    votes.loc[index,"VoteCount"] = votes.loc[index,"VoteCount"] * scaleValue
     return votes
 
 '''
@@ -51,9 +52,9 @@ def relationship(question, answer, votes):
     answer_vote = answer.merge(votes, how="left", left_on="Id", right_on="PostId")
     values = {"VoteCount":0}
     answer_vote.fillna(value=values,inplace=True)
-    question_user = question.merge(answer, how="left",left_on="Id",right_on="ParentId")
-    question.columns = ['QuestionId','UserId','VoteCount']
-    return question_user
+    answer_vote = answer_vote[['Id',"OwnerUserId","ParentId","VoteCount"]]
+    answer_vote.columns = ['AnswerId', "UserId", 'QuestionId', 'VoteCount']
+    return answer_vote
 
 
 def QuestionAnswerContent(rawData):
@@ -68,10 +69,10 @@ def QuestionAnswerId(rawData):
 
 def VoteCount(rawData, voteType):
     votes = rawData[rawData['VoteTypeId'] == voteType]
-    votes_group = votes.groupby(['PostId'])['Id'].count()
-    votes_group.reset_index()
-    votes = votes.rename(index=str,columns={'index':'PostId'})
-    return votes
+    votes_group = votes.groupby(['PostId']).count()
+    votes_group['PostId'] = votes_group.index
+    votes_group.columns = ["VoteCount", "PostId"]
+    return votes_group
 
 '''
 answer: Id, OwnerUserId, ParentId

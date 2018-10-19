@@ -6,4 +6,5 @@ def padding(sequence, maxlen, dtype='int32', padding='post', trunc='post', value
     return preprocessing.sequence.pad_sequences(sequence, maxlen, dtype, padding, trunc, value)
 
 def padding_easy(sequence, maxlen):
+    print(sequence)
     return preprocessing.sequence.pad_sequences(sequence, maxlen)

@@ -7,7 +7,7 @@ def getValueofNode(node):
     return node.text if node is not None else None
 
 def XML2DF(fileName, columnNames):
-    parsed_xml = et.parse(fileName);
+    parsed_xml = et.parse(fileName)
     df_xml = pd.DataFrame(columns=columnNames)
 
     for node in parsed_xml.getroot():

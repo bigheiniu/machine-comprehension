@@ -5,9 +5,9 @@ import re
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+# import sys
+# # reload(sys)
+# sys.setdefaultencoding('utf-8')
 
 '''
 text: [ sentence1, sentence2, ... ]
@@ -34,7 +34,7 @@ def text_to_wordlist(text_list, remove_stop_words=False, stem_words=False):
 
 
 def cleanText(text):
-
+    text = re.sub(r"<[^>]+>", "", text)
     text = re.sub(r"[^A-Za-z0-9^,!.\/'+-=]", " ", text)
     text = re.sub(r"what's", "what is ", text)
     text = re.sub(r"\'s", " ", text)
@@ -64,4 +64,5 @@ def cleanText(text):
     text = re.sub(r"e - mail", "email", text)
     text = re.sub(r"j k", "jk", text)
     text = re.sub(r"\s{2,}", " ", text)
+
     return text

@@ -1,5 +1,6 @@
 class Config:
-    vocab_size = 100002
+    # vocab_size = 100002
+    vocab_size = 10002
     embed_size = 200
     state_size = 256
     depth = 1
@@ -10,18 +11,19 @@ class Config:
     n_epoch = 512
     train_steps = 200
     maxlen = 200
-    ordianry_fileName = ["resource/Posts.xml", "resource/Votes.xml"]
-    pickle_fileName = ["resource/content.pickle","resource/question_answer_vote.pickle"]
-    loadPickle = False
-    isStore = True
+    ordianry_fileName = ["/home/bigheiniu/course/ASU_Course/472/coursePro/machine-comprehension/resource/Votes.xml","/home/bigheiniu/course/ASU_Course/472/coursePro/machine-comprehension/resource/Posts.xml"]
+    pickle_fileName = ["/home/bigheiniu/course/ASU_Course/472/coursePro/machine-comprehension/resource/content.pickle","/home/bigheiniu/course/ASU_Course/472/coursePro/machine-comprehension/resource/question_answer_vote.pickle"]
+    loadPickle = True
+    isStore = False
     valueCountSmooth = 0.1
-    word2vect_dir = "resource/GoogleNews-vectors-negative300.bin.gz"
+    word2vect_dir = "/home/bigheiniu/course/ASU_Course/472/coursePro/machine-comprehension/resource/GoogleNews-vectors-negative300.bin.gz"
     #if this answer be accepted, it will have 1.5 more votes
     voteScale = 1.5
+    VoteTypeId = "2"
+    constant_bias = 1.0
 
 class DataInfo:
-    userDim = 200
-    userSize = 2000 # greater than actual size
+    userSize = 242 # greater than actual size
     userDim = 128
 
     

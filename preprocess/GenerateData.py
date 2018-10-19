@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd 
 import pickle
 from preprocess import GetData, DataPreprocess, TextDataPreprocess, convert2index
-import Config
+from Config import Config
 
 class DataSetLoad:
     
@@ -14,30 +14,31 @@ class DataSetLoad:
                                   fileName[1]->Post.xml
     '''
 
-    def __init__(self, loadPickle, fileName):
-        self.loadPickle = loadPickle
-        self.fileName = fileName
+    def __init__(self, ):
+        self.loadPickle = Config.loadPickle
     
-    def loadData(self, isStore=False, StoreLoaction=None):
-        if(self.loadPickle):
-            with open(self.fileName[0], "rb") as f1:
+    def loadData(self):
+        if self.loadPickle :
+            print("load pickable file")
+            with open(Config.pickle_fileName[0], "rb") as f1:
                 content = pickle.load(f1)
-            with open(self.fileName[1],"rb") as f1:
+            with open(Config.pickle_fileName[1],"rb") as f1:
                 question_user_vote = pickle.load(f1)
         else:
-            votes = GetData.getVotesRelationship(self.fileName[0],isStore, StoreLoaction)
-            post = GetData.getPostData(self.fileName[1], isStore, StoreLoaction)
+            votes = GetData.getVotesRelationship(Config.ordianry_fileName[0])
+            votes = DataPreprocess.VoteCount(votes, Config.VoteTypeId)
+            post = GetData.getPostData(Config.ordianry_fileName[1])
             content = DataPreprocess.QuestionAnswerContent(post)
-            question,answer = DataPreprocess.QuestionAnswerId(post)
+            question, answer = DataPreprocess.QuestionAnswerId(post)
             votes = DataPreprocess.scaleVote(question,votes)
             question_user_vote = DataPreprocess.relationship(question, answer, votes)
             # clean text
-            content.iloc[:,0] = TextDataPreprocess.text_to_wordlist(content.iloc[:,0])
-            if(isStore):
-                with open(StoreLoaction[0],'wb') as f1:
-                    pickle.dump(f1, content)
-                with open(StoreLoaction[1],'wb') as f1:
-                    pickle.dump(f1,  question_user_vote)
+            content.loc[:, "Body"] = TextDataPreprocess.text_to_wordlist(content.loc[:, "Body"])
+            if(Config.isStore):
+                with open(Config.pickle_fileName[0],'wb') as f1:
+                    pickle.dump(content, f1)
+                with open(Config.pickle_fileName[1],'wb') as f1:
+                    pickle.dump(question_user_vote, f1)
         return content, question_user_vote
 
     # def LoadEmbedding(self):
