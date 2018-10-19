@@ -20,10 +20,11 @@ class Config:
     #if this answer be accepted, it will have 1.5 more votes
     voteScale = 1.5
     VoteTypeId = "2"
-    constant_bias = 1.0
+    constant_bias = 0.1
+    Lambda = 1
 
 class DataInfo:
-    userSize = 242 # greater than actual size
+    userSize = 1000000 # greater than actual size
     userDim = 128
 
     

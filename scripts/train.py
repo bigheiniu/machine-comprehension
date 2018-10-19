@@ -88,7 +88,6 @@ class Train:
 
                         answer_content_list, question_content, answer_length_list, \
         user_id_list, answer_vote_list, question_length = self.gen_data(content, question_user_vote_group, question_id)
-                        fuck = 1
                         loss, prediction = model.train_on_batch(session, answer_content_list, question_content, answer_length_list,
                         user_id_list, answer_vote_list, question_length)
 

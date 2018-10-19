@@ -133,20 +133,18 @@ class DeepLSTM:
         Loss = tf.map_fn(lambda x: tf.maximum(compareValue, x), Loss)
 
         ## reg = sum( u_i - sum(vote_i_this_question / vote_all_this_question * u_j_other_answer) )
-        # norm = []
+        norm = []
         # #PUZZLE: enumerate function in tensorflow ???
-        # index = 0
+        index = 0
         # #PUZZLE: for loop in tensor
-        # for user_id in self.answer_user_placeholder:
-        #     index_tensor = tf.convert_to_tensor(index)
-        #     u1_vote_ratio = tf.gather(self.answer_vote_placeholder, index_tensor)
-        #     u1_vec = tf.gather(user, user_id)
-        #     u2_matrix = tf.gather(user, self.answer_user_placeholder)
-        #     norm.append( u1_vec - tf.reduce_sum(tf.multiply(u1_vote_ratio , u2_matrix )))
-        #     index = index + 1
-        # norm = tf.stack(norm)
-        # norm = tf.reduce_sum(norm)
-        error_norm = tf.reduce_sum(Loss) #+ self.config.Lambda * norm
+        user_vote = tf.concat([u, tf.reshape(self.answer_vote_placeholder,[tf.shape(self.answer_vote_placeholder)[0],1])], 1)
+        def getnorm(tensor):
+            u1_vote_ratio = tensor[1]
+            u1_vec = tensor[0]
+            u1_vec = u1_vec - tf.reduce_sum(tf.multiply(u1_vote_ratio, u),axis=0)
+            return u1_vec
+        norm = tf.reduce_sum(tf.map_fn(getnorm, user_vote))
+        error_norm = tf.reduce_sum(Loss) + self.config.Lambda * norm
         #accuracy evaluation
 
         train_op = tf.train.AdamOptimizer(self.config.lr).minimize(error_norm)
@@ -155,7 +153,7 @@ class DeepLSTM:
     def predict_on_batch(self, sess, answer, question, answer_length_list, answer_user_list,
         answer_vote_list, question_length, state_keep_prob):
         feed = self.create_feed_dict( answer, question, answer_length_list, answer_user_list,
-        answer_vote_list, question_length, state_keep_prob )
+        answer_vote_list, question_length, state_keep_prob)
 
         prediction = sess.run(self.pred, feed_dict=feed)
         return prediction
